@@ -1,6 +1,11 @@
 from django.contrib import admin
-from .models import Car
+
+from .models import Category
+
 # Register your models here.
 
 
-admin.site.register(Car)
+@admin.register(Category)
+class CategoryModelAdmin(admin.ModelAdmin):
+    list_display = ['title', 'slug']
+    prepopulated_fields = {'slug':('title',)}

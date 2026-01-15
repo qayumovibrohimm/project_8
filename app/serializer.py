@@ -1,14 +1,15 @@
 from rest_framework import serializers
-from .models import Car
-
-# class CarSerializer(serializers.Serializer):
-#     name = serializers.CharField()
-#     color = serializers.CharField()
-#     price = serializers.DecimalField(max_digits=14, decimal_places=2)
+from .models import Category
 
 
-
-class CarModelSerializer(serializers.ModelSerializer):
+class ParentCategoryModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Car
+        model = Category
         exclude = ()
+
+
+class CreateCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        exclude = ('id', )
+
