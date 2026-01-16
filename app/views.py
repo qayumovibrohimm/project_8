@@ -2,10 +2,13 @@ from django.shortcuts import render
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from unicodedata import category
-from .models import Category
+from .models import Category, Product
 from rest_framework import status, permissions
 from datetime import datetime
-from .serializer import ParentCategoryModelSerializer, CreateCategorySerializer
+from .serializer import (ParentCategoryModelSerializer,
+                         CreateCategorySerializer,
+                         CreateProductSerializer,
+                         ProductListSerializer)
 
 
 # Create your views here.
@@ -29,7 +32,11 @@ class ChildrenCategoryByCategorySlug(ListAPIView):
         return queryset.children.all()
 
 class  ProductListByChildCategorySlug(ListAPIView):
-    pass
+    serializer_class = ProductListSerializer
+
+    def get_queryset(self):
+        slug = self.kwargs['slug']
+        return Product.objects.filter(category__slug=slug)
 
 class CategoryCreateApiView(CreateAPIView):
     queryset = Category.objects.all()
@@ -40,6 +47,37 @@ class CategoryDetailApiView(RetrieveUpdateDestroyAPIView):
     serializer_class = CreateCategorySerializer
     lookup_field = 'slug'
     permission_classes = [permissions.AllowAny]
+
+
+
+class ProductCreateApiView(CreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = CreateProductSerializer
+
+class ProductListApiView(ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductListSerializer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
