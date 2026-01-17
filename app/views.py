@@ -4,13 +4,15 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView,
 from rest_framework.response import Response
 from unicodedata import category
 from .models import Category, Product
-from rest_framework import status, permissions
+from rest_framework import status, permissions, authentication
 from datetime import datetime
 from .serializer import (ParentCategoryModelSerializer,
                          CreateCategorySerializer,
                          CreateProductSerializer,
                          ProductListSerializer)
 from .permissions import IsKayumBlocked, WorkDay, CanUpdateWithin4Hours
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
 
 # Create your views here.
 class ParentCategoryListApiView(ListAPIView):
@@ -66,11 +68,17 @@ class ProductCreateApiView(CreateAPIView):
 class ProductListApiView(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [authentication.TokenAuthentication]
 
 class ProductUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
     permission_classes = [CanUpdateWithin4Hours]
+
+
+    # user = User.objects.get(username='kayum')
+    # token, created = Token.objects.get_or_create(user=user)
 
 
 
