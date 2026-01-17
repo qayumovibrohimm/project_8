@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.decorators import permission_classes
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from unicodedata import category
@@ -9,7 +10,7 @@ from .serializer import (ParentCategoryModelSerializer,
                          CreateCategorySerializer,
                          CreateProductSerializer,
                          ProductListSerializer)
-
+from .permissions import IsKayumBlocked, WorkDay, CanUpdateWithin4Hours
 
 # Create your views here.
 class ParentCategoryListApiView(ListAPIView):
@@ -33,10 +34,18 @@ class ChildrenCategoryByCategorySlug(ListAPIView):
 
 class  ProductListByChildCategorySlug(ListAPIView):
     serializer_class = ProductListSerializer
+    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [WorkDay]
 
     def get_queryset(self):
-        slug = self.kwargs['slug']
-        return Product.objects.filter(category__slug=slug)
+        parent_slug = self.kwargs['slug']
+        child_slug = self.kwargs['child_slug']
+        parent_category = Category.objects.get(slug=parent_slug)
+        child_category = parent_category.children.filter(slug=child_slug).first()
+        if not child_category:
+            return Category.objects.none()
+
+        return child_category.products.all()
 
 class CategoryCreateApiView(CreateAPIView):
     queryset = Category.objects.all()
@@ -57,6 +66,14 @@ class ProductCreateApiView(CreateAPIView):
 class ProductListApiView(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
+
+class ProductUpdateView(RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductListSerializer
+    permission_classes = [CanUpdateWithin4Hours]
+
+
+
 
 
 
