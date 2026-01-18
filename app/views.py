@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework.decorators import permission_classes
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from unicodedata import category
 from .models import Category, Product
 from rest_framework import status, permissions, authentication
@@ -9,10 +10,12 @@ from datetime import datetime
 from .serializer import (ParentCategoryModelSerializer,
                          CreateCategorySerializer,
                          CreateProductSerializer,
-                         ProductListSerializer)
+                         ProductListSerializer,
+                         LoginSerializer)
 from .permissions import IsKayumBlocked, WorkDay, CanUpdateWithin4Hours
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
+
 
 # Create your views here.
 class ParentCategoryListApiView(ListAPIView):
@@ -77,15 +80,42 @@ class ProductUpdateView(RetrieveUpdateDestroyAPIView):
     permission_classes = [CanUpdateWithin4Hours]
 
 
-    # user = User.objects.get(username='kayum')
-    # token, created = Token.objects.get_or_create(user=user)
+class LoginAPIView(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data["user"]
+
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({
+            "status": 200,
+            "token": token.key,
+            "created":created,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email
+            }
+        }, status=status.HTTP_200_OK)
 
 
+class LogoutApiView(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
 
+    def post(self, request):
+        request.user.auth_token.delete()
 
-
-
-
+        return Response(
+            {
+                "status": 200,
+                "message": "Logout successfull"
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 
